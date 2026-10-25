@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Neuroscience Collaboration Map</title>
+<style>
+/* Layout: one wide network (people on the rim, shared themes inside), then a readout panel, an overlap matrix, and ideas.
+   Palette: surface-neutral grays with a blue bias; six validated categorical slots identify the six colleagues. */
+:root{
+  --bg:#f9f9f7; --surface:#fcfcfb; --ink:#0b0b0b; --ink2:#52514e; --muted:#898781;
+  --line:#e1e0d9; --rule:#c3c2b7; --theme-fill:#eef0f3; --theme-stroke:#b9bec7;
+  --seq:#2a78d6; --on-seq:#ffffff;
+  --c-SE:#2a78d6; --c-PR:#eb6834; --c-WE:#1baf7a; --c-TA:#eda100; --c-MA:#e87ba4; --c-GO:#008300; --c-FP:#6250d6;
+  --font:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0d0d0d; --surface:#1a1a19; --ink:#f0efec; --ink2:#c3c2b7; --muted:#898781;
+    --line:#2c2c2a; --rule:#383835; --theme-fill:#242629; --theme-stroke:#4a4f57;
+    --seq:#3987e5; --on-seq:#ffffff;
+    --c-SE:#3987e5; --c-PR:#d95926; --c-WE:#199e70; --c-TA:#c98500; --c-MA:#d55181; --c-GO:#008300; --c-FP:#9085e9;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0d0d0d; --surface:#1a1a19; --ink:#f0efec; --ink2:#c3c2b7; --muted:#898781;
+  --line:#2c2c2a; --rule:#383835; --theme-fill:#242629; --theme-stroke:#4a4f57;
+  --seq:#3987e5; --on-seq:#ffffff;
+  --c-SE:#3987e5; --c-PR:#d95926; --c-WE:#199e70; --c-TA:#c98500; --c-MA:#d55181; --c-GO:#008300; --c-FP:#9085e9;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.55;
+  padding-block:28px 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1080px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+h1{font-size:clamp(26px,4vw,36px);line-height:1.12;margin:0 0 8px;letter-spacing:-.01em;text-wrap:balance}
+h2{font-size:18px;margin:0 0 6px;letter-spacing:-.005em;text-wrap:balance}
+p{margin:0;max-width:68ch;color:var(--ink2)}
+.lede{font-size:16px}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px;min-width:0}
+.legend{display:flex;flex-wrap:wrap;gap:8px 16px;margin-bottom:12px;font-size:13px;color:var(--ink2)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:12px;height:12px;border-radius:3px;display:inline-block}
+.sw.theme{background:var(--theme-fill);border:1px solid var(--theme-stroke)}
+.scroll{overflow-x:auto}
+svg{display:block;min-width:860px;width:100%;height:auto}
+svg text{font-family:var(--font)}
+.edge{fill:none;stroke-linecap:round;transition:opacity .15s}
+.node{cursor:pointer;transition:opacity .15s}
+.node:focus{outline:none}
+.node:focus-visible .shape,.node.sel .shape{stroke-width:3.5}
+.dim{opacity:.1}
+.panel{min-height:110px;display:grid;gap:6px;align-content:start}
+.panel h3{margin:0;font-size:16px}
+.panel .tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}
+.tag{font-size:12px;padding:2px 9px;border-radius:99px;border:1px solid var(--line);color:var(--ink2);background:var(--bg)}
+.tag i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.grid3 .card p{font-size:14px}
+.big{font-size:30px;font-weight:650;letter-spacing:-.02em;color:var(--ink);line-height:1;margin-bottom:8px}
+.matrix{display:grid;grid-template-columns:96px repeat(7,minmax(52px,1fr));gap:2px;min-width:560px;font-size:13px}
+.matrix .h{font-size:11px;color:var(--muted);font-family:var(--mono);display:flex;align-items:center;justify-content:center;text-align:center;padding:4px 0}
+.matrix .r{font-size:12px;color:var(--ink2);display:flex;align-items:center}
+.matrix .c{height:40px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-variant-numeric:tabular-nums}
+.matrix .self{background:var(--bg);color:var(--muted)}
+.ideas{display:grid;gap:12px}
+.idea{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;padding:14px 0;border-top:1px solid var(--line)}
+.idea:first-child{border-top:0;padding-top:0}
+.idea .who{display:flex;gap:4px;flex-wrap:wrap;align-content:flex-start;max-width:150px}
+.dot{width:14px;height:14px;border-radius:4px;display:inline-block}
+.idea h3{margin:0;font-size:15px}
+.idea p{font-size:14px;grid-column:2}
+table{border-collapse:collapse;width:100%;font-size:13px;min-width:640px}
+th,td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{font-weight:600;color:var(--ink2);font-size:12px}
+td.n{text-align:center;font-variant-numeric:tabular-nums;font-family:var(--mono)}
+details summary{cursor:pointer;font-weight:600;font-size:15px}
+.foot{font-size:13px;color:var(--ink2);display:grid;gap:8px}
+.foot p{font-size:13px}
+@media (max-width:560px){.idea{grid-template-columns:1fr}.idea p{grid-column:1}.idea .who{max-width:none}}
+@media (prefers-reduced-motion:reduce){.edge,.node{transition:none}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">UT Austin Neuroscience · publication analysis</div>
+    <h1>Where seven research programs overlap, and where they don't</h1>
+    <p class="lede">Each colleague's published work is coded into 17 shared themes. Lines show how strongly a person works in a theme; themes that attract many lines are the common ground a center can be built on.</p>
+  </header>
+
+  <section class="card" aria-label="Collaboration network">
+    <div class="legend" id="legend"></div>
+    <div class="scroll"><svg id="net" viewBox="0 0 1100 880" role="img" aria-label="Network of seven researchers and the research themes they share"></svg></div>
+    <p style="margin-top:10px;font-size:13px">Line thickness is the strength of involvement (1 to 3). Box size and shade show cross-lab overlap: for every pair of labs, the smaller of their two involvement scores in that theme, summed. Hover, tap or tab to a person or a theme to isolate it.</p>
+  </section>
+
+  <section class="card panel" id="panel" aria-live="polite">
+    <h3>Select a person or theme</h3>
+    <p>The panel shows what drives each connection, using the actual titles behind the coding.</p>
+  </section>
+
+  
+
+  <section class="card">
+    <h2>Major modes of common interest</h2>
+    <p style="margin-bottom:12px;font-size:14px">Themes ranked by cross-lab overlap. Long bars mean several labs are working in the same area at real depth, not just touching it.</p>
+    <div id="modes" style="display:grid;gap:7px"></div>
+  </section>
+
+  
+
+  <section class="card" id="neuroai">
+    <h2>NeuroAI as an emerging anchor</h2>
+    <div style="display:grid;gap:10px;margin-top:8px">
+      <p><b style="color:var(--ink)">Two complementary halves.</b> Wei's lab uses network models and AI models to analyze neural data and to explain it. Pestilli's work builds deep-learning models and AI agents that analyze brain data. One half asks what AI can teach us about brains, the other what AI can do for brain science.</p>
+      <p><b style="color:var(--ink)">Why the data layer anchors it.</b> NeuroAI scores 12 in cross-lab overlap, mid-table, because only two labs work in it deeply. It sits next to the two largest modes, simulation and mechanistic models (30) and neural data methods (28), and the dashed link on the map ties it to the data layer. Without shared data and compute, NeuroAI is two labs. With them, it is the scientific mission for the whole group.</p>
+      <p><b style="color:var(--ink)">The trend is visible elsewhere.</b> Princeton lists NeuroAI as its own research area, Harvard's Kempner Institute has "AI and the Brain" as one of three areas, and UW's center lists NeuroAI 2026 as an upcoming event. UT could claim the data-and-compute version of it.</p>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Collaboration ideas the map suggests</h2>
+    <div class="ideas" id="ideas" style="margin-top:12px"></div>
+  </section>
+
+  
+
+  <section class="card"><details><summary>Supporting data: profile similarity and theme scores</summary><div style="display:grid;gap:22px;margin-top:16px"><div>
+    <h2>Profile similarity</h2>
+    <p style="margin-bottom:12px;font-size:14px">Cosine similarity of theme profiles, 0 to 1. A high value with no jointly authored paper is an untapped collaboration.</p>
+    <div class="scroll"><div class="matrix" id="matrix"></div></div>
+    <p style="margin-top:12px;font-size:14px">Seidemann and Priebe (0.84), Seidemann and Pestilli (0.78), Wei and Taillefumier (0.72) and Seidemann and Wei (0.69) are the closest. Only the first has a joint paper record. Mauk and Goldschen-Ohm, and Pestilli and Taillefumier, are the farthest apart (both 0.21). Wei and Pestilli rose to 0.59 once NeuroAI is counted.</p>
+  </div><div class="scroll">
+    <details>
+      <summary>Table view: theme scores per person (0 to 3) and overlap</summary>
+      <div style="margin-top:12px"><table id="tbl"></table></div>
+    </details>
+  </div></div></details></section>
+
+  <section class="foot">
+    <h2>How this was built, and what to check</h2>
+    <p><b style="color:var(--ink)">Source.</b> OpenAlex author records and the 25 most-cited works per person, plus each person's topic counts and pairwise co-authorship searches. I coded each work's title and keywords into the themes and scored involvement from 0 (absent) to 3 (central).</p>
+    <p><b style="color:var(--ink)">NeuroAI scores.</b> Scores for the NeuroAI theme, and Pestilli's AI-agent work, come from Pestilli's own description of the two labs, since agent work does not show up in the publication records used elsewhere.</p>
+    <p><b style="color:var(--ink)">Limits.</b> Top-cited works skew toward older papers, so recent shifts in each lab are underweighted. All 21 pairs were searched for co-authored records. Only Seidemann–Priebe, Seidemann–Taillefumier (one paper, also with Priebe), Priebe–Wei and Priebe–Taillefumier returned any. Several profiles contained misattributed records (for example drug discovery, traffic and astronomy papers), which I excluded, and Taillefumier's work is split across several author records, so I used the main one. I read "Mike Mauck" as Michael Mauk. Pestilli's themes were scored from the same top-25 method as everyone else. Each person should confirm their own row.</p>
+  </section>
+  <p style="font-size:13px;color:var(--muted)">Prepared by Franco Pestilli for discussion with Amy Lee, October 2026. Draft for internal conversation; scores should be confirmed by each researcher.</p>
+</div>
+
+<script>
+const D = {"W": 1100, "H": 880, "nodes": [{"id": "SE", "kind": "p", "label": "Seidemann", "w": 130, "h": 34, "x": 736.6, "y": 124.7}, {"id": "PR", "kind": "p", "label": "Priebe", "w": 130, "h": 34, "x": 363.4, "y": 124.7}, {"id": "WE", "kind": "p", "label": "Wei", "w": 130, "h": 34, "x": 886.2, "y": 658.2}, {"id": "TA", "kind": "p", "label": "Taillefumier", "w": 130, "h": 34, "x": 550.0, "y": 790.0}, {"id": "MA", "kind": "p", "label": "Mauk", "w": 130, "h": 34, "x": 130.8, "y": 362.1}, {"id": "GO", "kind": "p", "label": "Goldschen-Ohm", "w": 130, "h": 34, "x": 213.8, "y": 658.2}, {"id": "FP", "kind": "p", "label": "Pestilli", "w": 130, "h": 34, "x": 969.2, "y": 362.1}, {"id": "visual", "kind": "t", "label": "Visual cortex coding & circuits", "fs": 13.6, "ov": 12, "ovn": 0.4, "w": 283.0, "h": 32.0, "x": 696.8, "y": 216.5}, {"id": "dyn", "kind": "t", "label": "Cortical dynamics & variability", "fs": 13.8, "ov": 13, "ovn": 0.43, "w": 287.0, "h": 32.7, "x": 560.0, "y": 470.68176470588236}, {"id": "syn", "kind": "t", "label": "Synaptic integration & inhibition", "fs": 12.9, "ov": 9, "ovn": 0.3, "w": 286.4, "h": 30.0, "x": 479.5, "y": 267.4}, {"id": "chan", "kind": "t", "label": "Ion channels & receptor mechanisms", "fs": 11.0, "ov": 0, "ovn": 0.0, "w": 254.4, "h": 24.0, "x": 213.8, "y": 628.9635294117647}, {"id": "norm", "kind": "t", "label": "Efficient coding & Bayesian theory", "fs": 13.4, "ov": 11, "ovn": 0.37, "w": 303.0, "h": 31.3, "x": 800.3, "y": 509.36176470588236}, {"id": "pop", "kind": "t", "label": "Population codes & decoding", "fs": 13.6, "ov": 12, "ovn": 0.4, "w": 250.3, "h": 32.0, "x": 785.1, "y": 434.8741176470588}, {"id": "nav", "kind": "t", "label": "Spatial navigation & hippocampus", "fs": 11.9, "ov": 4, "ovn": 0.13, "w": 257.8, "h": 26.7, "x": 736.2, "y": 702.4}, {"id": "learn", "kind": "t", "label": "Learning, memory & plasticity", "fs": 12.5, "ov": 7, "ovn": 0.23, "w": 247.8, "h": 28.7, "x": 375.7, "y": 507.4405882352941}, {"id": "motor", "kind": "t", "label": "Motor control, timing & cerebellum", "fs": 11.7, "ov": 3, "ovn": 0.1, "w": 267.7, "h": 26.0, "x": 207.0, "y": 314.8}, {"id": "sim", "kind": "t", "label": "Simulation & mechanistic network models", "fs": 17.5, "ov": 30, "ovn": 1.0, "w": 439.5, "h": 44.0, "x": 500.8, "y": 594.7270588235294}, {"id": "data", "kind": "t", "label": "Neural data methods, ML & statistics", "fs": 17.1, "ov": 28, "ovn": 0.93, "w": 398.6, "h": 42.7, "x": 670.4, "y": 543.3770588235294}, {"id": "tech", "kind": "t", "label": "Imaging, recording & tools", "fs": 15.1, "ov": 19, "ovn": 0.63, "w": 265.8, "h": 36.7, "x": 613.0, "y": 332.2}, {"id": "math", "kind": "t", "label": "Stochastic processes & mathematical theory", "fs": 11.9, "ov": 4, "ovn": 0.13, "w": 329.0, "h": 26.7, "x": 622.0, "y": 745.4}, {"id": "beh", "kind": "t", "label": "Perception, behavior & cognition", "fs": 15.1, "ov": 19, "ovn": 0.63, "w": 320.2, "h": 36.7, "x": 756.7, "y": 397.6864705882353}, {"id": "img", "kind": "t", "label": "Human neuroimaging & connectivity", "fs": 11.2, "ov": 1, "ovn": 0.03, "w": 252.1, "h": 24.7, "x": 946.0, "y": 316.2}, {"id": "open", "kind": "t", "label": "Open science & data infrastructure", "fs": 11.2, "ov": 1, "ovn": 0.03, "w": 258.8, "h": 24.7, "x": 946.0, "y": 272.5}, {"id": "ai", "kind": "t", "label": "NeuroAI & AI for brain data", "fs": 13.6, "ov": 12, "ovn": 0.4, "w": 250.3, "h": 32.0, "x": 852.5, "y": 474.8741176470588}], "themes": [{"id": "visual", "label": "Visual cortex coding & circuits", "scores": [3, 3, 1, 0, 0, 0, 3], "evidence": "V1/MT motion, orientation tuning, voltage-sensitive-dye and calcium imaging of V1 (Seidemann); thalamocortical and synaptic mechanisms of selectivity (Priebe); V1 efficient coding (Wei)"}, {"id": "dyn", "label": "Cortical dynamics & variability", "scores": [2, 3, 2, 3, 0, 0, 0], "evidence": "Stimulus onset quenches variability; sync-to-async states (Priebe, Seidemann); replica mean-field and synchrony timescales (Taillefumier); latent dynamics (Wei)"}, {"id": "syn", "label": "Synaptic integration & inhibition", "scores": [2, 3, 0, 2, 0, 1, 0], "evidence": "Excitation/inhibition and spike threshold (Priebe); intrinsic conductances in behaving V1 (Seidemann); conductance-based neuron theory (Taillefumier); GABA-A receptor gating (Goldschen-Ohm)"}, {"id": "chan", "label": "Ion channels & receptor mechanisms", "scores": [0, 0, 0, 0, 0, 3, 0], "evidence": "Sodium-channel gating, GABA-A and benzodiazepine mechanism, cyclic-nucleotide channels"}, {"id": "norm", "label": "Efficient coding & Bayesian theory", "scores": [2, 1, 3, 1, 0, 0, 1], "evidence": "Efficient-coding Bayesian observer, Fisher/mutual information (Wei); optimal decoding and ideal observers (Seidemann)"}, {"id": "pop", "label": "Population codes & decoding", "scores": [3, 1, 3, 1, 0, 0, 1], "evidence": "Decoding of V1 population responses (Seidemann); neural tuning and representational geometry (Wei); MT speed population code (Priebe)"}, {"id": "nav", "label": "Spatial navigation & hippocampus", "scores": [0, 0, 3, 2, 1, 0, 0], "evidence": "Grid and head-direction models (Wei); place-cell capacity and hippocampal scaffold (Taillefumier); hippocampal plasticity (Mauk)"}, {"id": "learn", "label": "Learning, memory & plasticity", "scores": [0, 1, 2, 1, 3, 0, 0], "evidence": "Cerebellar eyelid conditioning, extinction, savings (Mauk); RNN memory and transitive inference (Wei); experience-dependent circuits (Priebe)"}, {"id": "motor", "label": "Motor control, timing & cerebellum", "scores": [1, 1, 0, 0, 3, 0, 0], "evidence": "What the cerebellum computes, timing of conditioned responses (Mauk); saccade and pursuit links (Priebe, Seidemann); optical BCI in motor cortex (Seidemann)"}, {"id": "sim", "label": "Simulation & mechanistic network models", "scores": [1, 1, 3, 3, 3, 2, 1], "evidence": "Large-scale cerebellar simulation (Mauk); spiking-network and event-driven models (Taillefumier); RNN models (Wei); kinetic and molecular models (Goldschen-Ohm)"}, {"id": "data", "label": "Neural data methods, ML & statistics", "scores": [2, 1, 3, 2, 0, 3, 3], "evidence": "pi-VAE, calcium deconvolution (Wei); ML for single-molecule traces (Goldschen-Ohm); open primate optogenetics resource (Seidemann); fast first-passage algorithms (Taillefumier)"}, {"id": "tech", "label": "Imaging, recording & tools", "scores": [3, 2, 1, 0, 0, 3, 3], "evidence": "Optical imaging and optogenetics in primates (Seidemann); whole-cell and viral tools (Priebe); single-molecule fluorescence, zero-mode waveguides (Goldschen-Ohm)"}, {"id": "math", "label": "Stochastic processes & mathematical theory", "scores": [0, 0, 2, 3, 0, 1, 0], "evidence": "First-passage, Gauss-Markov and mean-field limits (Taillefumier); Lie-group and attractor theory of grid cells (Wei); kinetic-model inference (Goldschen-Ohm)"}, {"id": "beh", "label": "Perception, behavior & cognition", "scores": [3, 1, 3, 0, 2, 0, 3], "evidence": "Attention, reaction-time detection, choice probability (Seidemann); perceptual bias laws (Wei); conditioned behavior (Mauk)"}, {"id": "img", "label": "Human neuroimaging & connectivity", "scores": [1, 0, 0, 0, 0, 0, 3], "evidence": "White-matter tracts and connectome inference (Pestilli); human fMRI of visual and attentional networks (Pestilli); early fMRI work on motion opponency in visual cortex (Seidemann)"}, {"id": "open", "label": "Open science & data infrastructure", "scores": [1, 0, 0, 0, 0, 0, 3], "evidence": "Open and reproducible neuroimaging, tractography reproducibility, and a 7T fMRI dataset to bridge neuroscience and AI (Pestilli); an open resource for primate optogenetics (Seidemann)"}, {"id": "ai", "label": "NeuroAI & AI for brain data", "scores": [1, 0, 3, 0, 1, 1, 3], "evidence": "RNN and network models of grid and head-direction systems and latent-variable models of neural data (Wei); a 7T fMRI dataset built to bridge cognitive neuroscience and AI, plus deep-learning models and AI agents for brain data analysis (Pestilli, from his own description); ML for single-molecule analysis (Goldschen-Ohm)"}], "people": [{"id": "SE", "name": "Seidemann"}, {"id": "PR", "name": "Priebe"}, {"id": "WE", "name": "Wei"}, {"id": "TA", "name": "Taillefumier"}, {"id": "MA", "name": "Mauk"}, {"id": "GO", "name": "Goldschen-Ohm"}, {"id": "FP", "name": "Pestilli"}], "cos": [[1.0, 0.84, 0.69, 0.45, 0.3, 0.45, 0.78], [0.84, 1.0, 0.52, 0.58, 0.31, 0.39, 0.48], [0.69, 0.52, 1.0, 0.72, 0.54, 0.45, 0.59], [0.45, 0.58, 0.72, 1.0, 0.38, 0.45, 0.21], [0.3, 0.31, 0.54, 0.38, 1.0, 0.21, 0.26], [0.45, 0.39, 0.45, 0.45, 0.21, 1.0, 0.49], [0.78, 0.48, 0.59, 0.21, 0.26, 0.49, 1.0]], "shared": {"SE-PR": ["visual", "dyn", "syn", "tech"], "SE-WE": ["dyn", "norm", "pop", "data", "beh"], "SE-TA": ["dyn", "syn", "data"], "SE-MA": ["beh"], "SE-GO": ["data", "tech"], "SE-FP": ["visual", "data", "tech", "beh"], "PR-WE": ["dyn"], "PR-TA": ["dyn", "syn"], "PR-MA": [], "PR-GO": ["tech"], "PR-FP": ["visual", "tech"], "WE-TA": ["dyn", "nav", "sim", "data", "math"], "WE-MA": ["learn", "sim", "beh"], "WE-GO": ["sim", "data"], "WE-FP": ["data", "beh", "ai"], "TA-MA": ["sim"], "TA-GO": ["sim", "data"], "TA-FP": ["data"], "MA-GO": ["sim"], "MA-FP": ["beh"], "GO-FP": ["data", "tech"]}, "unique": {"SE": [], "PR": [], "WE": [], "TA": [], "MA": ["motor"], "GO": ["chan"], "FP": ["img", "open"]}, "bridges": ["dyn", "sim", "data", "tech", "beh"], "reach": [3, 4, 3, 1, 2, 2, 2, 2, 1, 4, 5, 4, 2, 4, 1, 1, 2], "links": [["ai", "data"]], "ovl": [12, 13, 9, 0, 11, 12, 4, 7, 3, 30, 28, 19, 4, 19, 1, 1, 12]};
+const COLORS = {SE:'var(--c-SE)',PR:'var(--c-PR)',WE:'var(--c-WE)',TA:'var(--c-TA)',MA:'var(--c-MA)',GO:'var(--c-GO)',FP:'var(--c-FP)'};
+const PNAME = {}; D.people.forEach(p=>PNAME[p.id]=p.name);
+const PIDX = {}; D.people.forEach((p,i)=>PIDX[p.id]=i);
+const NS = 'http://www.w3.org/2000/svg';
+const el=(t,a={},p)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e};
+
+// legend
+const lg=document.getElementById('legend');
+D.people.forEach(p=>{const s=document.createElement('span');s.innerHTML=`<i class="sw" style="background:${COLORS[p.id]}"></i>${p.name}`;lg.appendChild(s)});
+const ts=document.createElement('span');ts.innerHTML='<i class="sw theme"></i>Research theme, sized by cross-lab overlap';lg.appendChild(ts);
+const em=document.createElement('span');em.innerHTML='<i class="sw theme" style="border:2px dashed var(--seq)"></i>Dashed: emerging theme, linked to data methods';lg.appendChild(em);
+
+// network
+const svg=document.getElementById('net');
+const nodeById={}; D.nodes.forEach(n=>nodeById[n.id]=n);
+const gE=el('g',{},svg), gN=el('g',{},svg);
+const edges=[];
+D.themes.forEach(t=>t.scores.forEach((w,i)=>{
+  if(!w)return; const pid=D.people[i].id; const a=nodeById[pid], b=nodeById[t.id];
+  const e=el('line',{x1:a.x,y1:a.y,x2:b.x,y2:b.y,class:'edge','stroke':COLORS[pid],'stroke-width':w*1.8,'stroke-opacity':w===1?.14:.6},gE);
+  edges.push({e,pid,tid:t.id,w});
+}));
+(D.links||[]).forEach(([a,b])=>{
+  const A=nodeById[a],B=nodeById[b];
+  const e=el('line',{x1:A.x,y1:A.y,x2:B.x,y2:B.y,class:'edge','stroke':'var(--seq)','stroke-width':2.2,'stroke-dasharray':'6 5','stroke-opacity':.85},gE);
+  edges.push({e,pid:a,tid:b,w:3});
+});
+const nodeEls={};
+D.nodes.forEach(n=>{
+  const g=el('g',{class:'node',tabindex:0,role:'button','aria-label':n.label,transform:`translate(${n.x},${n.y})`},gN);
+  if(n.kind==='p'){
+    el('rect',{class:'shape',x:-n.w/2,y:-n.h/2,width:n.w,height:n.h,rx:n.h/2,fill:'var(--surface)',stroke:COLORS[n.id],'stroke-width':3},g);
+    const t=el('text',{'text-anchor':'middle','dominant-baseline':'central','font-size':14,'font-weight':650,fill:'var(--ink)'},g);t.textContent=n.label;
+  }else{
+    const mix=Math.round(n.ovn*34);
+    el('rect',{class:'shape',x:-n.w/2,y:-n.h/2,width:n.w,height:n.h,rx:6,fill:`color-mix(in srgb, var(--seq) ${mix}%, var(--theme-fill))`,stroke:n.id==='ai'?'var(--seq)':'var(--theme-stroke)','stroke-width':n.id==='ai'?2.2:1.2,'stroke-dasharray':n.id==='ai'?'5 3':'none'},g);
+    const t=el('text',{'text-anchor':'middle','dominant-baseline':'central','font-size':n.fs,'font-weight':n.ovn>.6?650:400,fill:'var(--ink)'},g);t.textContent=n.label;
+  }
+  nodeEls[n.id]=g;
+  g.addEventListener('mouseenter',()=>focusNode(n.id));
+  g.addEventListener('mouseleave',()=>focusNode(sticky));
+  g.addEventListener('focus',()=>focusNode(n.id));
+  g.addEventListener('blur',()=>focusNode(sticky));
+  g.addEventListener('click',()=>{sticky=(sticky===n.id)?null:n.id;focusNode(sticky)});
+  g.addEventListener('keydown',ev=>{if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();sticky=(sticky===n.id)?null:n.id;focusNode(sticky)}});
+});
+let sticky=null;
+
+const panel=document.getElementById('panel');
+const tagP=pid=>`<span class="tag"><i style="background:${COLORS[pid]}"></i>${PNAME[pid]}</span>`;
+function focusNode(id){
+  Object.values(nodeEls).forEach(g=>{g.classList.remove('dim');g.classList.remove('sel')});
+  edges.forEach(x=>x.e.classList.remove('dim'));
+  if(!id){panel.innerHTML='<h3>Select a person or theme</h3><p>The panel shows what drives each connection, using the actual titles behind the coding.</p>';return}
+  const keep=new Set([id]);
+  edges.forEach(x=>{ const hit=(x.pid===id||x.tid===id); if(hit){keep.add(x.pid);keep.add(x.tid)} else x.e.classList.add('dim') });
+  Object.entries(nodeEls).forEach(([k,g])=>{if(!keep.has(k))g.classList.add('dim')});
+  nodeEls[id].classList.add('sel');
+  const n=nodeById[id];
+  if(n.kind==='p'){
+    const i=PIDX[id];
+    const mine=D.themes.map(t=>({t,w:t.scores[i]})).filter(x=>x.w>0).sort((a,b)=>b.w-a.w);
+    const core=mine.filter(x=>x.w===3).map(x=>x.t.label);
+    const pairs=D.people.filter(p=>p.id!==id).map(p=>({p,c:D.cos[i][PIDX[p.id]]})).sort((a,b)=>b.c-a.c);
+    panel.innerHTML=`<h3>${n.label}</h3>
+      <p><b style="color:var(--ink)">Central themes:</b> ${core.join(', ')||'none scored at the top level'}.</p>
+      <p><b style="color:var(--ink)">Closest profiles:</b> ${pairs.slice(0,2).map(x=>`${x.p.name} (${x.c.toFixed(2)})`).join(', ')}. <b style="color:var(--ink)">Furthest:</b> ${pairs[pairs.length-1].p.name} (${pairs[pairs.length-1].c.toFixed(2)}).</p>
+      <div class="tags">${mine.map(x=>`<span class="tag">${x.t.label} · ${x.w}</span>`).join('')}</div>`;
+  }else{
+    const t=D.themes.find(t=>t.id===id);
+    const who=t.scores.map((w,i)=>({w,id:D.people[i].id})).filter(x=>x.w>0).sort((a,b)=>b.w-a.w);
+    panel.innerHTML=`<h3>${t.label}</h3>
+      <p>${t.evidence}.</p><p><b style="color:var(--ink)">Cross-lab overlap:</b> ${D.ovl[D.themes.indexOf(t)]} (rank ${D.rank[t.id]} of ${D.themes.length}).</p>
+      <div class="tags">${who.map(x=>`<span class="tag"><i style="background:${COLORS[x.id]}"></i>${PNAME[x.id]} · ${x.w}</span>`).join('')}</div>`;
+  }
+}
+
+// modes
+D.rank={};const order=D.themes.map((t,k)=>({t,k,v:D.ovl[k]})).sort((a,b)=>b.v-a.v);
+order.forEach((x,i)=>D.rank[x.t.id]=i+1);
+const md=document.getElementById('modes');const mxv=order[0].v;
+order.forEach(x=>{
+  const row=document.createElement('div');
+  row.style.cssText='display:grid;grid-template-columns:minmax(140px,260px) 1fr 36px;gap:10px;align-items:center;font-size:13px';
+  const dots=x.t.scores.map((w,i)=>w>=2?`<i class="dot" style="width:10px;height:10px;background:${COLORS[D.people[i].id]}" title="${D.people[i].name}"></i>`:'').join('');
+  row.innerHTML=`<span style="color:var(--ink)">${x.t.label}</span><span style="display:flex;align-items:center;gap:8px;min-width:0"><span style="height:12px;width:${Math.max(2,x.v/mxv*100)}%;max-width:calc(100% - 90px);background:var(--seq);border-radius:0 4px 4px 0;opacity:${.35+.65*x.v/mxv};flex:none"></span><span style="display:flex;gap:3px;flex-wrap:wrap">${dots}</span></span><span style="text-align:right;font-variant-numeric:tabular-nums;color:var(--ink2)">${x.v}</span>`;
+  md.appendChild(row);
+});
+
+// matrix
+const mx=document.getElementById('matrix');
+mx.appendChild(document.createElement('div'));
+D.people.forEach(p=>{const h=document.createElement('div');h.className='h';h.textContent=p.name.length>8?p.name.slice(0,8)+'.':p.name;h.title=p.name;mx.appendChild(h)});
+D.people.forEach((p,i)=>{
+  const r=document.createElement('div');r.className='r';r.innerHTML=`<i class="sw" style="background:${COLORS[p.id]};margin-right:6px"></i>${p.name}`;mx.appendChild(r);
+  D.people.forEach((q,j)=>{
+    const c=document.createElement('div');
+    if(i===j){c.className='c self';c.textContent='–'}
+    else{const v=D.cos[i][j];const pct=Math.round(8+ (v-0.1)/0.8*62);
+      c.className='c';c.textContent=v.toFixed(2);
+      c.style.background=`color-mix(in srgb, var(--seq) ${pct}%, var(--surface))`;
+      c.style.color=pct>42?'var(--on-seq)':'var(--ink)';
+      c.title=`${p.name} and ${q.name}: ${v.toFixed(2)}`}
+    mx.appendChild(c);
+  });
+});
+
+// ideas
+const IDEAS=[
+ {who:['PR','TA','SE'],t:'From cell to population variability',d:'Priebe and Seidemann already co-author on cortical states and intrinsic conductances, and Priebe and Taillefumier on conductance-based variability theory. A named program linking whole-cell data in behaving primate V1 to mean-field theory is mostly in place and needs structure and compute.'},
+ {who:['SE','FP'],t:'Attention in V1, from neurons to humans',d:'Seidemann recorded attention effects in primate V1 populations, and your early work measured attention effects on contrast response in human visual cortex. Pairing the two gives a cross-species test of the same population-coding question, and it is the closest profile pair in the group involving you.'},
+ {who:['FP','SE','PR'],t:'A multiscale visual pathway',d:'Seidemann and Priebe cover circuits and population responses in V1, and your work traces the human white-matter pathways that connect visual areas, such as the vertical occipital fasciculus and the dorsal to ventral visual pathway. Together they could describe one pathway from synapse to tract, with imaging as the human arm rather than the headline.'},
+ {who:['SE','WE'],t:'A test bed for efficient-coding theory',d:'Wei\'s efficient-coding and representational-geometry theory and Seidemann\'s large-scale V1 population imaging are 0.69 similar and share no papers. Seidemann supplies data that can falsify Wei\'s predictions.'},
+ {who:['WE','FP','SE','GO'],t:'NeuroAI anchored in data science',d:'Wei analyzes neural data with network and AI models, and Pestilli builds deep-learning models and AI agents for brain data. Pestilli\'s 7T fMRI dataset was built to bridge cognitive neuroscience and AI, and Wei\'s models are built to explain such data. The data layer lets the two halves share datasets, benchmarks and TACC-scale compute, and extends to Seidemann\'s primate recordings and Goldschen-Ohm\'s single-molecule ML.'},
+ {who:['WE','TA'],t:'A theory core for codes and circuits',d:'Wei and Taillefumier overlap on navigation, simulation, mathematical theory and data methods (0.72) with no joint record. Together with the dynamics theme, they could anchor a visible theory group with a shared postdoc line.'},
+ {who:['GO','PR','TA'],t:'Receptor kinetics into circuit models',d:'Goldschen-Ohm\'s GABA-A gating and single-molecule kinetic models could supply measured parameters for the inhibition-focused circuit and conductance-based models of Priebe and Taillefumier. This is the clearest concrete path for the molecules-to-circuits claim.'},
+ {who:['MA','WE','TA'],t:'The cerebellum at scale',d:'Mauk\'s large-scale cerebellar simulation work predates what national-scale computing now makes routine. Pairing it with modern recurrent-network and mean-field methods would extend his lineage, and it is the one place the motor-timing theme can connect to the rest of the group.'},
+ {who:['FP','WE','SE','GO','TA'],t:'The data and methods layer',d:'Neural data methods engage five of seven, from latent-variable models to ML for single-molecule traces to open primate resources. Your open and reproducible neuroimaging work is the only one of the seven with data infrastructure as a central theme, which makes it the natural connective tissue and the place where TACC-scale processing would serve everyone.'}
+];
+const ib=document.getElementById('ideas');
+IDEAS.forEach(x=>{
+  const d=document.createElement('div');d.className='idea';
+  d.innerHTML=`<div class="who">${x.who.map(w=>`<i class="dot" style="background:${COLORS[w]}" title="${PNAME[w]}"></i>`).join('')}</div><h3>${x.t}</h3><p>${x.d}</p>`;
+  ib.appendChild(d);
+});
+
+// table
+const tb=document.getElementById('tbl');
+tb.innerHTML='<thead><tr><th>Theme</th>'+D.people.map(p=>`<th style="text-align:center">${p.name}</th>`).join('')+'<th style="text-align:center">Active (2+)</th><th style="text-align:center">Overlap</th></tr></thead><tbody>'+
+ D.themes.map((t,k)=>`<tr><td>${t.label}</td>${t.scores.map(s=>`<td class="n">${s||'·'}</td>`).join('')}<td class="n">${D.reach[k]}</td><td class="n">${D.ovl[k]}</td></tr>`).join('')+'</tbody>';
+</script>
+
+</body>
+</html>
