@@ -1,27 +1,18 @@
-# Neuroscience Collaboration Map
+# Computational Neuroscience at UT Austin
 
-A one-page, self-contained view of how seven UT Austin neuroscience research programs overlap, built to support the discussion of a computational neuroscience center.
+A one-page view of where neuroscience at UT Austin overlaps and where a coordinated effort could build something distinctive. Draft for community discussion.
 
 Open `index.html` in any browser. It has no dependencies and works offline.
 
-## What it shows
+## What it contains
 
-- A network of seven researchers and 17 research themes. Box size and shade show cross-lab overlap.
-- The major modes of common interest, ranked.
-- NeuroAI as an emerging theme anchored in neural data methods.
-- Collaboration ideas, and a collapsed section with profile similarity and theme scores.
+- A network linking twelve research programs to the themes they share.
+- A network of 20 scientific themes, connected when the same programs work in both.
+- A landscape of themes by biological scale and approach.
+- Six opportunities for UT and a short national comparison.
 
 ## Method
 
-Publication records come from OpenAlex (author profiles, 25 most-cited works per person, and pairwise co-authorship searches). Each work was coded into themes and scored 0 to 3 for involvement. Cross-lab overlap is, for every pair of labs, the smaller of their two scores in a theme, summed.
+Themes were coded from the titles and keywords of published work (OpenAlex records) for twelve UT research programs. A program counts as engaged when its work in a theme is substantial. The coding is approximate and meant to start a conversation.
 
-## Caveats
-
-- Top-cited works skew toward older papers, so recent shifts are underweighted.
-- Several OpenAlex profiles contained misattributed records, which were excluded.
-- NeuroAI scores and AI-agent work come from the author's own description.
-- Each researcher should confirm their own row.
-
-## Sharing
-
-If you publish this with GitHub Pages, the page is public. Keep the repository private for internal discussion, and note that GitHub Pages for private repositories requires a paid plan.
+Prepared by Franco Pestilli & Amy Lee.
